@@ -33,17 +33,27 @@ CubeState::CubeState(const char* cubeState)
                 int dom1 = maps.color_to_dominant_value[e1];
                 int dom2 = maps.color_to_dominant_value[e2];
 
-                if (dom1 > dom2)
-                {
-                    
-                } else {
-
-                }
-
-
                 int orient = 0;
 
-                std::uint64_t fullInfo = (orient << 5) | (e.first);
+                int side1 = maps.color_to_dominant_value[check1];
+                int side2 = maps.color_to_dominant_value[check2];
+
+                if (dom1 > dom2)
+                {
+                    if (side1 > side2) {
+                        orient = 0;
+                    } else {
+                        orient = 1;
+                    }
+                } else {
+                    if (side2 > side1) {
+                        orient = 0;
+                    } else {
+                        orient = 1;
+                    }
+                }
+
+                std::uint64_t fullInfo = (orient << 4) | (e.first);
                 
                 edgeState |= fullInfo << (i * 5);
             }
@@ -60,10 +70,11 @@ CubeState::CubeState(const char* cubeState)
 
         for (std::pair e : maps.corners)
         {
-            char check1 = maps.index_to_color[e.second[0]];
+            char check1 = maps.index_to_color[e.second[0]]; // the correct/final value of this position
             char check2 = maps.index_to_color[e.second[1]];
             char check3 = maps.index_to_color[e.second[2]];
 
+            // checking to see if the corner matches any combination of the correct side
             if (
                 (c1 == check1 && c2 == check2 && c3 == check3)
                 || (c1 == check1 && c2 == check3 && c3 == check2)
@@ -75,7 +86,19 @@ CubeState::CubeState(const char* cubeState)
                 // check orientation here
                 int orient = 0;
 
-                std::uint64_t fullInfo = (orient << 5) | (e.first);
+                int dom1 = maps.color_to_dominant_value[c1];
+                int dom2 = maps.color_to_dominant_value[c2];
+                int dom3 = maps.color_to_dominant_value[c3];
+
+                if (dom1 > dom2 && dom1 > dom3) {
+                    orient = abs(maps.color_to_dominant_value[check1] - 3);
+                } else if (dom2 > dom1 && dom2 > dom3) {
+                    orient = abs(maps.color_to_dominant_value[check2] - 3);
+                } else {
+                    orient = abs(maps.color_to_dominant_value[check3] - 3);
+                }
+
+                std::uint64_t fullInfo = (orient << 3) | (e.first);
                 
                 cornerState |= fullInfo << (i * 5);
             }

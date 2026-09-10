@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +15,7 @@ public:
     const std::uint64_t EdgesSolved = 0b01011'01010'01001'01000'00111'00110'00101'00100'00011'00010'00001'00000;
     const std::uint64_t CornersSolved = 0b00111'00110'00101'00100'00011'00010'00001'00000;
 
-    CubeState(long edgeState, long cornerState)
+    CubeState(std::uint64_t edgeState, std::uint64_t cornerState)
     {
         EdgeState = edgeState;
         CornerState = cornerState;
