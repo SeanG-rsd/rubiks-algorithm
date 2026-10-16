@@ -13,4 +13,6 @@ int main()
     CubeState state = CubeState(initState);
 
     std::cout << "Is Solved: " << state.IsSolved() << ".\n";
+
+    
 }
