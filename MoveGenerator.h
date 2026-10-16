@@ -43,4 +43,7 @@ public:
     // applies a space separated sequence like "R U R' U' F2"
     CubeState MakeMoves(const CubeState& state, const char* algorithm) const;
 
+    // "U", "U'", "U2", "R", ...
+    static const char* MoveName(int move);
+
 };

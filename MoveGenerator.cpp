@@ -27,6 +27,12 @@ namespace
         };
 
     const char SIDES[] = "URFDLB";
+
+    const char* const MOVE_NAMES[MoveGenerator::MOVES] =
+        {
+            "U", "U'", "U2", "R", "R'", "R2", "F", "F'", "F2",
+            "D", "D'", "D2", "L", "L'", "L2", "B", "B'", "B2"
+        };
 }
 
 MoveGenerator::MoveGenerator()
@@ -154,4 +160,9 @@ CubeState MoveGenerator::MakeMoves(const CubeState& state, const char* algorithm
     }
 
     return result;
+}
+
+const char* MoveGenerator::MoveName(int move)
+{
+    return MOVE_NAMES[move];
 }

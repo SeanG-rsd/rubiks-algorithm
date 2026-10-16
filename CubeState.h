@@ -18,6 +18,13 @@ public:
     static constexpr std::uint64_t EdgesSolved = 0b01011'01010'01001'01000'00111'00110'00101'00100'00011'00010'00001'00000;
     static constexpr std::uint64_t CornersSolved = 0b00111'00110'00101'00100'00011'00010'00001'00000;
 
+    // a solved cube
+    CubeState()
+    {
+        EdgeState = EdgesSolved;
+        CornerState = CornersSolved;
+    }
+
     CubeState(std::uint64_t edgeState, std::uint64_t cornerState)
     {
         EdgeState = edgeState;
