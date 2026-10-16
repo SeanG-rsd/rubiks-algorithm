@@ -1,109 +1,150 @@
 
-#include <iostream>
-#include <bitset>
+#include <cstring>
+#include <stdexcept>
 #include "CubeState.h"
 #include "Maps.h"
 
 // UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
 
+// 0 if the pieces are an even permutation of their slots, 1 if odd
+static int PermutationParity(const int* pieces, int count)
+{
+    int parity = 0;
+
+    for (int i = 0; i < count; i++)
+    {
+        for (int j = i + 1; j < count; j++)
+        {
+            if (pieces[i] > pieces[j])
+            {
+                parity ^= 1;
+            }
+        }
+    }
+
+    return parity;
+}
+
 CubeState::CubeState(const char* cubeState)
 {
-    Maps maps;
+    if (cubeState == nullptr || strlen(cubeState) != 54)
+    {
+        throw std::invalid_argument("cube state must be 54 characters");
+    }
 
-    const int EDGES   = 12;
-    const int CORNERS =  8;
+    // the maps assume every center is its own face's color
+    for (int center = 4; center < 54; center += 9)
+    {
+        if (cubeState[center] != Maps::index_to_color[center])
+        {
+            throw std::invalid_argument("centers must be in URFDLB order");
+        }
+    }
 
     std::uint64_t edgeState = 0;
+    int edgePieces[EDGES];
+    int flipTotal = 0;
+    int seen = 0;
 
-    for (int i = EDGES - 1; i >= 0; i--)
+    for (int slot = 0; slot < EDGES; slot++)
     {
-        char e1 = cubeState[maps.edges[i][0]];
-        char e2 = cubeState[maps.edges[i][1]];
+        char e1 = cubeState[Maps::edges[slot][0]];
+        char e2 = cubeState[Maps::edges[slot][1]];
 
-        for (std::pair e : maps.edges)
+        int piece = -1;
+        int flip = 0;
+
+        for (int p = 0; p < EDGES && piece < 0; p++)
         {
-            char check1 = maps.index_to_color[e.second[0]];
-            char check2 = maps.index_to_color[e.second[1]];
+            char check1 = Maps::index_to_color[Maps::edges[p][0]]; // the correct/final value of this position
+            char check2 = Maps::index_to_color[Maps::edges[p][1]];
 
-            if (
-                (e1 == check1 && e2 == check2)
-                || (e1 == check2 && e2 == check1)
-            ) {
-                // check orientation here
-                int dom1 = maps.color_to_dominant_value[e1];
-                int dom2 = maps.color_to_dominant_value[e2];
-
-                int orient = 0;
-
-                int side1 = maps.color_to_dominant_value[check1];
-                int side2 = maps.color_to_dominant_value[check2];
-
-                if (dom1 > dom2)
-                {
-                    if (side1 > side2) {
-                        orient = 0;
-                    } else {
-                        orient = 1;
-                    }
-                } else {
-                    if (side2 > side1) {
-                        orient = 0;
-                    } else {
-                        orient = 1;
-                    }
-                }
-
-                std::uint64_t fullInfo = (orient << 4) | (e.first);
-                
-                edgeState |= fullInfo << (i * 5);
+            if (e1 == check1 && e2 == check2)
+            {
+                piece = p;
+                flip = 0;
+            }
+            else if (e1 == check2 && e2 == check1)
+            {
+                piece = p;
+                flip = 1;
             }
         }
-    } 
+
+        if (piece < 0 || (seen & (1 << piece)))
+        {
+            throw std::invalid_argument("edges don't match a real cube");
+        }
+
+        seen |= 1 << piece;
+        edgePieces[slot] = piece;
+        flipTotal += flip;
+
+        edgeState |= static_cast<std::uint64_t>((flip << 4) | piece) << (slot * 5);
+    }
 
     std::uint64_t cornerState = 0;
+    int cornerPieces[CORNERS];
+    int twistTotal = 0;
+    seen = 0;
 
-    for (int i = CORNERS - 1; i >= 0; i--)
+    for (int slot = 0; slot < CORNERS; slot++)
     {
-        char c1 = cubeState[maps.corners[i][0]];
-        char c2 = cubeState[maps.corners[i][1]];
-        char c3 = cubeState[maps.corners[i][2]];
+        const int* facelets = Maps::corners[slot];
 
-        for (std::pair e : maps.corners)
+        // find which facelet has the U/D color
+        int twist = 0;
+        while (twist < 3 && cubeState[facelets[twist]] != 'U' && cubeState[facelets[twist]] != 'D')
         {
-            char check1 = maps.index_to_color[e.second[0]]; // the correct/final value of this position
-            char check2 = maps.index_to_color[e.second[1]];
-            char check3 = maps.index_to_color[e.second[2]];
+            twist++;
+        }
 
-            // checking to see if the corner matches any combination of the correct side
-            if (
-                (c1 == check1 && c2 == check2 && c3 == check3)
-                || (c1 == check1 && c2 == check3 && c3 == check2)
-                || (c1 == check2 && c2 == check1 && c3 == check3)
-                || (c1 == check2 && c2 == check3 && c3 == check1)
-                || (c1 == check3 && c2 == check1 && c3 == check2)
-                || (c1 == check3 && c2 == check2 && c3 == check1)
-            ) {
-                // check orientation here
-                int orient = 0;
+        int piece = -1;
 
-                int dom1 = maps.color_to_dominant_value[c1];
-                int dom2 = maps.color_to_dominant_value[c2];
-                int dom3 = maps.color_to_dominant_value[c3];
+        if (twist < 3)
+        {
+            // read the colors clockwise starting from the U/D one, so they line up with the piece's solved colors
+            char c1 = cubeState[facelets[twist]];
+            char c2 = cubeState[facelets[(twist + 1) % 3]];
+            char c3 = cubeState[facelets[(twist + 2) % 3]];
 
-                if (dom1 > dom2 && dom1 > dom3) {
-                    orient = abs(maps.color_to_dominant_value[check1] - 3);
-                } else if (dom2 > dom1 && dom2 > dom3) {
-                    orient = abs(maps.color_to_dominant_value[check2] - 3);
-                } else {
-                    orient = abs(maps.color_to_dominant_value[check3] - 3);
+            for (int p = 0; p < CORNERS && piece < 0; p++)
+            {
+                if (
+                    c1 == Maps::index_to_color[Maps::corners[p][0]]
+                    && c2 == Maps::index_to_color[Maps::corners[p][1]]
+                    && c3 == Maps::index_to_color[Maps::corners[p][2]]
+                ) {
+                    piece = p;
                 }
-
-                std::uint64_t fullInfo = (orient << 3) | (e.first);
-                
-                cornerState |= fullInfo << (i * 5);
             }
         }
-    } 
+
+        if (piece < 0 || (seen & (1 << piece)))
+        {
+            throw std::invalid_argument("corners don't match a real cube");
+        }
+
+        seen |= 1 << piece;
+        cornerPieces[slot] = piece;
+        twistTotal += twist;
+
+        cornerState |= static_cast<std::uint64_t>((twist << 3) | piece) << (slot * 5);
+    }
+
+    // states you can only get by taking the cube apart
+    if (flipTotal % 2 != 0)
+    {
+        throw std::invalid_argument("an edge is flipped");
+    }
+    if (twistTotal % 3 != 0)
+    {
+        throw std::invalid_argument("a corner is twisted");
+    }
+    if (PermutationParity(edgePieces, EDGES) != PermutationParity(cornerPieces, CORNERS))
+    {
+        throw std::invalid_argument("two pieces are swapped");
+    }
 
     this->EdgeState = edgeState;
     this->CornerState = cornerState;
@@ -125,7 +166,7 @@ CubeState::CubeState(const char* cubeState)
 
     // corners
 
-    // 7: D9-R9-B7 
+    // 7: D9-R9-B7
     // 6: D7-L7-B9
     // 5: F7-L9-D1
     // 4: F9-R7-D3

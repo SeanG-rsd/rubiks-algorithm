@@ -1,53 +1,38 @@
 #pragma once
 
-#include <unordered_map>
-#include <array>
-
  struct Maps
 {
-    // slots ordered by descending sticker dominance (U/D = 3, F/B = 2, L/R = 1)
-    std::unordered_map<int, std::array<int, 2>> edges = {
-        {0,  {7, 19}},   // U8-F2
-        {1,  {3, 37}},   // U4-L2
-        {2,  {1, 46}},   // U2-B2
-        {3,  {5, 10}},   // U6-R2
-        {4,  {23, 12}},  // F6-R4
-        {5,  {21, 41}},  // F4-L6
-        {6,  {50, 39}},  // B6-L4
-        {7,  {48, 14}},  // B4-R6
-        {8,  {28, 25}},  // D2-F8
-        {9,  {30, 43}},  // D4-L8
-        {10, {34, 52}},  // D8-B8
-        {11, {32, 16}}   // D6-R8
-    };
+    // facelet index -> the color it has on a solved cube
+    static constexpr char index_to_color[] = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
     // slots ordered by descending sticker dominance (U/D = 3, F/B = 2, L/R = 1)
-    std::unordered_map<int, std::array<int, 3>> corners = {
-        {0, {8, 20, 9}},   // U9-F3-R1
-        {1, {6, 18, 38}},  // U7-F1-L3
-        {2, {0, 47, 36}},  // U1-B3-L1
-        {3, {2, 45, 11}},  // U3-B1-R3
-        {4, {29, 26, 15}}, // D3-F9-R7
-        {5, {27, 24, 44}}, // D1-F7-L9
-        {6, {33, 53, 42}}, // D7-B9-L7
-        {7, {35, 51, 17}}  // D9-B7-R9
+    // an edge is flipped when its more dominant color isn't on the slot's first facelet
+    static constexpr int edges[12][2] = {
+        {7, 19},   // 00: U8-F2
+        {3, 37},   // 01: U4-L2
+        {1, 46},   // 02: U2-B2
+        {5, 10},   // 03: U6-R2
+        {23, 12},  // 04: F6-R4
+        {21, 41},  // 05: F4-L6
+        {50, 39},  // 06: B6-L4
+        {48, 14},  // 07: B4-R6
+        {28, 25},  // 08: D2-F8
+        {30, 43},  // 09: D4-L8
+        {34, 52},  // 10: D8-B8
+        {32, 16}   // 11: D6-R8
     };
 
-    std::unordered_map<int, char> index_to_color = {
-        {0, 'U'}, {1, 'U'}, {2, 'U'}, {3, 'U'}, {4, 'U'}, {5, 'U'}, {6, 'U'}, {7, 'U'}, {8, 'U'},
-        {9, 'R'}, {10, 'R'}, {11, 'R'}, {12, 'R'}, {13, 'R'}, {14, 'R'}, {15, 'R'}, {16, 'R'}, {17, 'R'},
-        {18, 'F'}, {19, 'F'}, {20, 'F'}, {21, 'F'}, {22, 'F'}, {23, 'F'}, {24, 'F'}, {25, 'F'}, {26, 'F'},
-        {27, 'D'}, {28, 'D'}, {29, 'D'}, {30, 'D'}, {31, 'D'}, {32, 'D'}, {33, 'D'}, {34, 'D'}, {35, 'D'},
-        {36, 'L'}, {37, 'L'}, {38, 'L'}, {39, 'L'}, {40, 'L'}, {41, 'L'}, {42, 'L'}, {43, 'L'}, {44, 'L'},
-        {45, 'B'}, {46, 'B'}, {47, 'B'}, {48, 'B'}, {49, 'B'}, {50, 'B'}, {51, 'B'}, {52, 'B'}, {53, 'B'}
-    };
-
-    std::unordered_map<char, int> color_to_dominant_value = {
-        {'U', 3},
-        {'D', 3},
-        {'F', 2},
-        {'B', 2},
-        {'L', 1},
-        {'R', 1}
+    // U/D facelet first, then clockwise around the corner (looking at it from outside)
+    // a corner's twist is which of the three facelets holds its U/D color, so a clockwise
+    // twist is always 1 no matter which slot the corner is in
+    static constexpr int corners[8][3] = {
+        {8, 9, 20},   // 0: U9-R1-F3
+        {6, 18, 38},  // 1: U7-F1-L3
+        {0, 36, 47},  // 2: U1-L1-B3
+        {2, 45, 11},  // 3: U3-B1-R3
+        {29, 26, 15}, // 4: D3-F9-R7
+        {27, 44, 24}, // 5: D1-L9-F7
+        {33, 53, 42}, // 6: D7-B9-L7
+        {35, 17, 51}  // 7: D9-R9-B7
     };
 };

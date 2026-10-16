@@ -7,36 +7,40 @@
 18 possible moves
 6 sides * 3 scenarios [rotate, inverse rotate, double rotate]
 
+move = side * 3 + scenario, sides in URFDLB order (same as the facelet string)
+0 = U, 1 = U', 2 = U2, 3 = R, 4 = R', 5 = R2, ... 17 = B2
+
 */
 
 class MoveGenerator
 {
 
+public:
+    static constexpr int MOVES = 18;
+
 private:
-    int move_map[16 * 18] =
-        {
-            1, 4, 4, 9, 5, 1, 9, 5, 0, 4, 1, 0, 4, 5, 5, 1, // move 0
-            1, 5, 4, 1, 5, 9, 9, 4, 0, 1, 1, 5, 4, 0, 5, 4, // move 1
-            1, 9, 4, 5, 5, 4, 9, 1, 0, 5, 1, 4, 4, 1, 5, 0, // etc.
-            3, 6, 6, 11, 7, 3, 11, 7, 2, 6, 3, 2, 6, 7, 7, 3,
-            3, 7, 6, 3, 7, 11, 11, 6, 2, 3, 3, 7, 6, 2, 7, 6,
-            3, 11, 6, 7, 7, 6, 11, 3, 2, 7, 3, 6, 6, 3, 7, 2,
-            8, 11, 9, 8, 10, 9, 11, 10, 4, 7, 5, 4, 6, 5, 7, 6,
-            8, 9, 9, 10, 10, 11, 11, 8, 4, 5, 5, 6, 6, 7, 7, 4,
-            8, 10, 9, 11, 10, 8, 11, 9, 4, 6, 5, 7, 6, 4, 7, 5,
-            0, 1, 1, 2, 2, 3, 3, 0, 0, 1, 1, 2, 2, 3, 3, 0,
-            0, 3, 1, 0, 2, 1, 3, 2, 0, 3, 1, 0, 2, 1, 3, 2,
-            0, 2, 1, 3, 2, 0, 3, 1, 0, 2, 1, 3, 2, 0, 3, 1,
-            0, 7, 4, 0, 7, 8, 8, 4, 0, 3, 3, 7, 4, 0, 7, 4,
-            0, 4, 4, 8, 7, 0, 8, 7, 0, 4, 3, 0, 4, 7, 7, 3,
-            0, 8, 4, 7, 7, 4, 8, 0, 0, 7, 3, 4, 4, 3, 7, 0,
-            2, 5, 5, 10, 6, 2, 10, 6, 1, 5, 2, 1, 5, 6, 6, 2,
-            2, 6, 5, 2, 6, 10, 10, 5, 1, 2, 2, 6, 5, 1, 6, 5,
-            2, 10, 5, 6, 6, 5, 10, 2, 1, 6, 2, 5, 5, 2, 6, 1,
-        };
+    // after the move, slot j holds the piece that was in slot ...From[j],
+    // with ...Flip[j] / ...Twist[j] added to that piece's orientation
+    struct MoveTable
+    {
+        int edgeFrom[CubeState::EDGES];
+        int edgeFlip[CubeState::EDGES];
+        int cornerFrom[CubeState::CORNERS];
+        int cornerTwist[CubeState::CORNERS];
+    };
+
+    MoveTable moves[MOVES];
+
+    // the table for doing `first` and then `second`
+    static MoveTable Then(const MoveTable& first, const MoveTable& second);
 
 public:
 
-    CubeState MakeMove(int i);
+    MoveGenerator();
+
+    CubeState MakeMove(const CubeState& state, int move) const;
+
+    // applies a space separated sequence like "R U R' U' F2"
+    CubeState MakeMoves(const CubeState& state, const char* algorithm) const;
 
 };
