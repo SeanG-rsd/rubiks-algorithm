@@ -148,32 +148,4 @@ CubeState::CubeState(const char* cubeState)
 
     this->EdgeState = edgeState;
     this->CornerState = cornerState;
-
-    // edges
-
-    // 11: R8-D6
-    // 10: B8-D8
-    // 09: L8-D4
-    // 08: F8-D2
-    // 07: R6-B4
-    // 06: B6-L4
-    // 05: L6-F4
-    // 04: F6-R4
-    // 03: U6-R2
-    // 02: U2-B2
-    // 01: U4-L2
-    // 00: U8-F2
-
-    // corners
-
-    // 7: D9-R9-B7
-    // 6: D7-L7-B9
-    // 5: F7-L9-D1
-    // 4: F9-R7-D3
-    // 3: U3-B1-R3
-    // 2: U1-L1-B3
-    // 1: U7-F1-L3
-    // 0: U9-F3-R1
-
-    // UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
 }
